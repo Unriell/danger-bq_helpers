@@ -14,6 +14,11 @@ module Danger
         @build_reports << path if path =~ /.*\.build-report.json$/
         @test_reports << path if path =~ /.*\.test-report.xml$/
       end
+
+      @build_reports.each do |path|
+        path = Pathname(path)
+        label_tests_summary(path: path)
+      end      
     end
 
     # read platform name from file
