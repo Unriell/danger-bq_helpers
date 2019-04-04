@@ -1,33 +1,39 @@
 module Danger
-  # This is your plugin class. Any attributes or methods you expose here will
-  # be available from within your Dangerfile.
-  #
-  # To be published on the Danger plugins site, you will need to have
-  # the public interface documented. Danger uses [YARD](http://yardoc.org/)
-  # for generating documentation from your plugin source, and you can verify
-  # by running `danger plugins lint` or `bundle exec rake spec`.
-  #
-  # You should replace these comments with a public description of your library.
-  #
-  # @example Ensure people are well warned about merging on Mondays
-  #
-  #          my_plugin.warn_on_mondays
-  #
-  # @see  Sebastián Varela/danger-bq_helpers
-  # @tags monday, weekends, time, rattata
-  #
   class DangerBqHelpers < Plugin
 
-    # An attribute that you can read/write from your Dangerfile
-    #
-    # @return   [Array<String>]
-    attr_accessor :my_attribute
+    # all build reports
+    attr_accessor :build_reports
 
-    # A method that you can call from your Dangerfile
-    # @return   [Array<String>]
-    #
-    def warn_on_mondays
-      warn 'Trying to merge code on a Monday' if Date.today.wday == 1
+    # all test reports
+    attr_accessor :test_reports
+
+    def scan_files
+      @build_reports = []
+      @test_reports = []
+      Find.find("./output") do |path|
+        @build_reports << path if path =~ /.*\.build-report.json$/
+        @test_reports << path if path =~ /.*\.test-report.xml$/
+      end
     end
+
+    # read platform name from file
+    # @return String
+    def read_platform_from_file(path:)
+        path.basename.to_s.split('.').first
+    end
+
+    # rewrite json report to put platform
+    def label_tests_summary(path:) 
+      json = File.read(path.to_s)
+      data = JSON.parse(json)
+      data["tests_summary_messages"].each { |message| 
+          if !message.empty?
+             message.insert(1, "**[" + read_platform_from_file(path: path) + "]**")
+          end
+      }
+      File.open(path.to_s,"w") do |f|
+         f.puts JSON.pretty_generate(data)
+      end 
+    end    
   end
 end
