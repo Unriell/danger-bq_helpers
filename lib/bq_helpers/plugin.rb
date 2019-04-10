@@ -33,7 +33,7 @@ module Danger
       data = JSON.parse(json)
       data["tests_summary_messages"].each { |message| 
           if !message.empty?
-             message.insert(1, "**[" + read_platform_from_file(path: path) + "]**")
+             message.insert(1, "**📢 [" + read_platform_from_file(path: path) + "]**")
           end
       }
       File.open(path.to_s,"w") do |f|
